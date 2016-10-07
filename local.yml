@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  user: ubuntu
+
+  tasks: 
+    - include: apacheRunbook/apache-config.yml
+
+    - name: Check if local is setup
+      action: command echo "Setup ok"
