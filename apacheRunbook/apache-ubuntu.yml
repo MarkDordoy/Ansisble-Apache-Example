@@ -1,5 +1,5 @@
 ---
-- hosts: localhost
+- hosts: pull_mode_hosts
   become: true
   vars:
     http_port: 80
