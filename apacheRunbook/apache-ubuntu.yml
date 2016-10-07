@@ -27,16 +27,16 @@
      notify:
       - restart apache2
 
-    - name: create virtual host file
-      template: src=virtualhost.conf dest=/etc/apache2/sites-available/{{ shortdomain }}.conf
-      become: true
+   - name: create virtual host file
+     template: src=virtualhost.conf dest=/etc/apache2/sites-available/{{ shortdomain }}.conf
+     become: true
 
-    - name: a2ensite {{ shortdomain }}
-      command: a2ensite {{ shortdomain }}
-      args:
-        creates: /etc/apache2/sites-enabled/{{ shortdomain }}.conf
-      notify:
-       - restart apache2
+   - name: a2ensite {{ shortdomain }}
+     command: a2ensite {{ shortdomain }}
+     args:
+      creates: /etc/apache2/sites-enabled/{{ shortdomain }}.conf
+     notify:
+      - restart apache2
 
    handlers:
     - name: restart apache2
