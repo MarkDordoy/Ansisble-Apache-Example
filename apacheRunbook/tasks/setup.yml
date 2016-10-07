@@ -18,7 +18,7 @@
     - restart apache2
 
 - name: create virtual host file
-  template: src=virtualhost.conf dest=/etc/apache2/sites-available/{{ shortdomain }}.conf
+  template: src=apacheRunbook/files/virtualhost.conf dest=/etc/apache2/sites-available/{{ shortdomain }}.conf
  
 - name: a2ensite {{ shortdomain }}
   command: a2ensite {{ shortdomain }}
