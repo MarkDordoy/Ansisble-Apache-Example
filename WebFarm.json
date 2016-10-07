@@ -1,0 +1,334 @@
+{  
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"Autoscaling wordpress site",
+    "Parameters":{  
+        "ASCooldown":{  
+            "Type":"String",
+            "Description":"The number of seconds after a scaling activity is completed before any further scaling activities can start",
+            "Default":"120"
+        },
+        "ASDesiredCapacity":{  
+            "Type":"String",
+            "Description":"Specifies the desired capacity for the Auto Scaling group",
+            "Default":"1"
+        },
+        "ASHealthCheckGracePeriod":{  
+            "Type":"String",
+            "Description":"The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health",
+            "Default":"1200"
+        },
+        "LCImageID":{  
+            "Type":"AWS::EC2::Image::Id",
+            "Description":"Image ID used in Launch Configuration",
+            "Default":"ami-ed82e39e"
+        },
+        "LCInstanceType":{  
+            "Type":"String",
+            "Description":"Instance Type used for Launch Configuration",
+            "Default":"t2.micro"
+        },
+        "LCKeyPairName":{  
+            "Type":"AWS::EC2::KeyPair::KeyName",
+            "Description":"Keypair used to launch the launch configuration instance"
+        },
+        "ASMaxSize":{  
+            "Type":"String",
+            "Description":"The max size of the Auto Scaling group",
+            "Default":"3"
+        },
+        "ASMinSize":{  
+            "Type":"String",
+            "Description":"The minimum size of the Auto Scaling group",
+            "Default":"1"
+        },
+        "ASVPCZoneIdentifier":{  
+            "Type":"List<AWS::EC2::Subnet::Id>",
+            "Description":"A list of subnet identifiers of Amazon Virtual Private Cloud (Amazon VPCs)"
+        },
+        "FeatureName":{  
+            "Type":"String",
+            "Description":"Autoscaling feature name, used for tagging",
+            "Default":"Leodis"
+        },
+        "EBSRootSize":{  
+            "Type":"String",
+            "Description":"EBS Root Size in GB",
+            "Default":"50"
+        },
+        "EBSRootType":{  
+            "Type":"String",
+            "Description":"EBS Root type",
+            "AllowedValues":[  
+                "gp2",
+                "standard"
+            ]
+        },
+        "VpcId":{  
+            "Type":"String",
+            "Description":"The VPC to assoicate the security group with",
+            "Default":"vpc-b0fb2cd5"
+        }
+    },
+    "Resources":{  
+        "AutoScalingGroup":{  
+            "Type":"AWS::AutoScaling::AutoScalingGroup",
+            "Properties":{  
+                "Cooldown":{  
+                    "Ref":"ASCooldown"
+                },
+                "DesiredCapacity":{  
+                    "Ref":"ASDesiredCapacity"
+                },
+                "HealthCheckGracePeriod":{  
+                    "Ref":"ASHealthCheckGracePeriod"
+                },
+                "HealthCheckType": "ELB",
+                "LaunchConfigurationName":{  
+                    "Ref":"AutoscalingLaunchConfigurationGroup"
+                },
+                "LoadBalancerNames":[{  
+                    "Ref": "ELB"
+                }],
+                "TerminationPolicies" : [
+                    "OldestInstance"
+                ],
+                "MaxSize":{  
+                    "Ref":"ASMaxSize"
+                },
+                "MinSize":{  
+                    "Ref":"ASMinSize"
+                },
+                "Tags":[  
+                    {  
+                        "Key":"Name",
+                        "Value":{  
+                            "Ref":"FeatureName"
+                        },
+                        "PropagateAtLaunch":true
+                    }
+                ],
+                "VPCZoneIdentifier":{  
+                    "Ref":"ASVPCZoneIdentifier"
+                }
+            },
+            "DependsOn":"AutoscalingLaunchConfigurationGroup"
+        },
+        "AutoscalingLaunchConfigurationGroup":{  
+            "Type":"AWS::AutoScaling::LaunchConfiguration",
+            "Properties":{  
+                "ImageId":{  
+                    "Ref":"LCImageID"
+                },
+                "InstanceType":{  
+                    "Ref":"LCInstanceType"
+                },
+                "KeyName":{  
+                    "Ref":"LCKeyPairName"
+                },
+                "SecurityGroups":[  
+                    {  
+                        "Ref":"WebServerSecurityGroup"
+                    }
+                ],
+                "BlockDeviceMappings":[  
+                    {  
+                        "DeviceName":"/dev/xvda",
+                        "Ebs":{  
+                            "VolumeSize":{  
+                                "Ref":"EBSRootSize"
+                            },
+                            "VolumeType":{  
+                                "Ref":"EBSRootType"
+                            }
+                        }
+                    }
+                ],
+                "UserData":{  
+                    "Fn::Base64":{  
+                        "Fn::Join":[  
+                            "",
+                            [  
+                                "#!/bin/bash -ex\n",
+                                "apt-get update -y\n",
+                                "apt-get install python-software-properties -y\n",
+                                "sudo add-apt-repository ppa:ansible/ansible -y\n",
+                                "sudo apt-get update -y\n",
+                                "sudo apt-get install ansible -y\n",
+                                "sudo apt-get install git -y\n",
+                                " ansible-pull --accept-host-key -d /etc/ansible/leodis -c master -U https://github.com/MarkDordoy/Leodis.git  -i 'localhost'\n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Metadata":{  
+                "ServerName":{  
+                    "Ref":"FeatureName"
+                }
+            }
+        },
+        "ScaleUpPolicy":{  
+            "Type":"AWS::AutoScaling::ScalingPolicy",
+            "Properties":{  
+                "AdjustmentType":"ChangeInCapacity",
+                "AutoScalingGroupName":{  
+                    "Ref":"AutoScalingGroup"
+                },
+                "Cooldown":{  
+                    "Ref":"ASCooldown"
+                },
+                "ScalingAdjustment":"1"
+            }
+        },
+        "ScaleDownPolicy" : {
+      		"Type" : "AWS::AutoScaling::ScalingPolicy",
+      		"Properties" : {
+        		"AdjustmentType" : "ChangeInCapacity",
+        		"AutoScalingGroupName" : { 
+        			"Ref" : "AutoScalingGroup" 
+        		},
+        		"Cooldown" : {
+        			"Ref": "ASCooldown"
+        		},
+        		"ScalingAdjustment" : "-1"
+      		}
+    	},
+        "CPUAlarmHigh":{  
+            "Type":"AWS::CloudWatch::Alarm",
+            "Properties":{  
+                "EvaluationPeriods":"5",
+                "Statistic":"Average",
+                "Threshold":"65",
+                "AlarmDescription":"Alarm if CPU too high or metric disappears indicating instance is down - Scale Up",
+                "Period":"60",
+                "AlarmActions":[  
+                    {  
+                        "Ref":"ScaleUpPolicy"
+                    }
+                ],
+                "Namespace":"AWS/EC2",
+                "Dimensions":[  
+                    {  
+                        "Name":"AutoScalingGroupName",
+                        "Value":{  
+                            "Ref":"AutoScalingGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator":"GreaterThanThreshold",
+                "MetricName":"CPUUtilization"
+            }
+        },
+        "CPUAlarmLow": {
+     		"Type": "AWS::CloudWatch::Alarm",
+     		"Properties": {
+        		"AlarmDescription": "Scale-down if CPU < 60% for 30 minutes",
+        		"MetricName": "CPUUtilization",
+        		"Namespace": "AWS/EC2",
+        		"Statistic": "Average",
+        		"Period": "900",
+        		"EvaluationPeriods": "2",
+        		"Threshold": "5",
+        		"AlarmActions": [ 
+        			{ 
+        				"Ref": "ScaleDownPolicy" 
+        			} 
+        		],
+        		"Dimensions": [
+          			{
+            			"Name": "AutoScalingGroupName",
+            			"Value": 
+            				{
+            					"Ref": "AutoScalingGroup"
+            				}
+          			}
+        		],
+        		"ComparisonOperator": "LessThanThreshold"
+      		}
+    	},
+        "WebServerSecurityGroup":{  
+            "Type":"AWS::EC2::SecurityGroup",
+            "Properties":{  
+                "GroupDescription":"Enable HTTP access via port 80 locked down to the load balancer + SSH access",
+                "SecurityGroupIngress":[  
+                    {  
+                        "IpProtocol":"tcp",
+                        "FromPort":"80",
+                        "ToPort":"80",
+                        "CidrIp":"0.0.0.0/0"
+                    },
+                    {  
+                        "IpProtocol":"tcp",
+                        "FromPort":"22",
+                        "ToPort":"22",
+                        "CidrIp":"0.0.0.0/0"
+                    }
+                ],
+                "VpcId":{  
+                    "Ref":"VpcId"
+                },
+                "Tags":[  
+                    {  
+                        "Key":"Name",
+                        "Value":{  
+                            "Ref":"FeatureName"
+                        }
+                    }
+                ]
+            }
+        },
+        "ELB" : {
+            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties" : {
+                "Subnets" : {
+                    "Ref" : "ASVPCZoneIdentifier"
+                },
+                "Scheme" : "internal",
+                "SecurityGroups" : [{
+                    "Ref" : "WebServerSecurityGroup"
+                }],
+                "Listeners" : [ {
+                    "LoadBalancerPort" : "80",
+                    "InstancePort" : "80",
+                    "Protocol" : "HTTP"
+                }],
+                "HealthCheck" : {
+                    "Target" : "HTTP:80/",
+                    "HealthyThreshold" : "3",
+                    "UnhealthyThreshold" : "5",
+                    "Interval" : "30",
+                    "Timeout" : "5"
+                }
+            }
+        }
+    },
+    "Outputs":{  
+        "AutoscalingGroupOutput":{  
+            "Value":{  
+                "Ref":"AutoScalingGroup"
+            },
+            "Description":"Autoscaling group"
+        },
+        "LaunchConfigurationGroup":{  
+            "Value":{  
+                "Ref":"AutoscalingLaunchConfigurationGroup"
+            },
+            "Description":"LaunchConfiguration Group"
+        },
+        "SecurityGroupOutput":{  
+            "Value":{  
+                "Fn::GetAtt":[  
+                    "WebServerSecurityGroup",
+                    "GroupId"
+                ]
+            },
+            "Description":"Scurity group created for EC2 instances"
+        },
+        "ELBURL" : {
+            "Value" : {
+                "Fn::GetAtt" : ["ELB","DNSName"]
+            },
+            "Description" : "DNS for ELB"
+        }
+    }
+}
