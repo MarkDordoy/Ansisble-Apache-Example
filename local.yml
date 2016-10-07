@@ -3,7 +3,7 @@
   user: root
 
   tasks: 
-    - include: apacheRunbook/apache-ubuntu.yml
+    - include: apacheRunbook/tasks/setup.yml
 
     - name: Check if local is setup
       action: command echo "Setup ok"
