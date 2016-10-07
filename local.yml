@@ -1,6 +1,6 @@
 ---
 - hosts: localhost
-  user: ubuntu
+  user: root
 
   tasks: 
     - include: apacheRunbook/apache-ubuntu.yml
