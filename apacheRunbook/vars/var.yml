@@ -1,5 +1,5 @@
 ---
-- http_port: 80
-  domain: leodis.ac.uk
-  shortdomain: leodis
-  alias: "leodis.ac.uk leodis.co.uk www.leodis.co.uk leodis.net www.leodis.net"
+ - http_port: 80
+   domain: leodis.ac.uk
+   shortdomain: leodis
+   alias: "leodis.ac.uk leodis.co.uk www.leodis.co.uk leodis.net www.leodis.net"
