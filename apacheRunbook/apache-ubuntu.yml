@@ -1,4 +1,5 @@
 ---
+- host: localhost
   become: true
   vars:
     http_port: 80
