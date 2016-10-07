@@ -1,5 +1,4 @@
 ---
-- hosts: ApacheWebFarm
   become: true
   vars:
     http_port: 80
