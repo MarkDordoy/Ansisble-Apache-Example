@@ -4,6 +4,7 @@
 
   tasks: 
     - include: apacheRunbook/tasks/setup.yml
+    - include: apacheRunbook/handlers/handlers.yml
 
     - name: Check if local is setup
       action: command echo "Setup ok"
