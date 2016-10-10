@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  user: root
+
+  tasks: 
+    - include: apacheRunbook/tasks/main.yml
+    - include: apacheRunbook/handlers/main.yml
+
+    - name: Check if local is setup
+      action: command echo "Setup ok"
+
+  vars: 
+   - http_port: 80
+   - domain: leodis.ac.uk
+   - shortdomain: leodis
+   - alias: "leodis.ac.uk leodis.co.uk www.leodis.co.uk leodis.net www.leodis.net"
