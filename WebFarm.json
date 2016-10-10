@@ -17,11 +17,6 @@
             "Description":"The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health",
             "Default":"1200"
         },
-        "LCImageID":{  
-            "Type":"AWS::EC2::Image::Id",
-            "Description":"Image ID used in Launch Configuration",
-            "Default":"ami-ed82e39e"
-        },
         "LCInstanceType":{  
             "Type":"String",
             "Description":"Instance Type used for Launch Configuration",
@@ -67,6 +62,21 @@
             "Type":"String",
             "Description":"The VPC to assoicate the security group with",
             "Default":"vpc-b0fb2cd5"
+        }
+    },
+    "Mappings": {
+        "RegionMap" : {
+            "us-east-1"      : {"64" : "ami-2d39803a" },
+            "us-west-1"      : {"64" : "ami-48db9d28" },
+            "us-west-2"      : {"64" : "ami-d732f0b7" },
+            "eu-west-1"      : {"64" : "ami-ed82e39e" },
+            "eu-central-1"   : {"64" : "ami-26c43149" },
+            "ap-southeast-1" : {"64" : "ami-21d30f42" },
+            "ap-northeast-1" : {"64" : "ami-a21529cc" },
+            "ap-southeast-2" : {"64" : "ami-ba3e14d9" },
+            "ap-northeast-2" : {"64" : "ami-09dc1267" },
+            "ap-south-1"     : {"64" : "ami-4a90fa25" },
+            "ap-east-1"      : {"64" : "ami-dc48dcb0" }
         }
     },
     "Resources":{  
@@ -116,9 +126,7 @@
         "AutoscalingLaunchConfigurationGroup":{  
             "Type":"AWS::AutoScaling::LaunchConfiguration",
             "Properties":{  
-                "ImageId":{  
-                    "Ref":"LCImageID"
-                },
+                "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "64"]},
                 "InstanceType":{  
                     "Ref":"LCInstanceType"
                 },
@@ -155,13 +163,15 @@
                                 "sudo apt-get update -y\n",
                                 "sudo apt-get install ansible -y\n",
                                 "sudo apt-get install git -y\n",
-                                " ansible-pull --accept-host-key -d /etc/ansible/leodis -c master -U https://github.com/MarkDordoy/Leodis.git  -i 'localhost'\n"
+                                "ansible-pull --accept-host-key -d /etc/ansible/leodis -c master -U https://github.com/MarkDordoy/Leodis.git  -i 'localhost'\n",
+                                "echo \"*/20 * * * * root /usr/local/bin/ansible-pull --accept-host-key -c master -d /etc/ansible/leodis -i 'localhost' -U https://github.com/MarkDordoy/Leodis.git >> /var/log/ansible-pull.log 2>&1\" > /tmp/mycrontab.txt\n",
+                                "sudo -u ubuntu bash -c 'crontab /tmp/mycrontab.txt'\n"
                             ]
                         ]
                     }
                 }
             },
-            "Metadata":{  
+            "Metadata":{   
                 "ServerName":{  
                     "Ref":"FeatureName"
                 }
