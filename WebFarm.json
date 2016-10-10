@@ -10,19 +10,19 @@
         "ASDesiredCapacity":{  
             "Type":"String",
             "Description":"Specifies the desired capacity for the Auto Scaling group",
-            "Default":"1"
+            "Default":"2"
         },
         "ASHealthCheckGracePeriod":{  
             "Type":"String",
             "Description":"The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health",
             "Default":"1200"
         },
-        "LCInstanceType":{  
+        "InstanceType":{  
             "Type":"String",
             "Description":"Instance Type used for Launch Configuration",
             "Default":"t2.micro"
         },
-        "LCKeyPairName":{  
+        "KeyPairName":{  
             "Type":"AWS::EC2::KeyPair::KeyName",
             "Description":"Keypair used to launch the launch configuration instance"
         },
@@ -36,9 +36,9 @@
             "Description":"The minimum size of the Auto Scaling group",
             "Default":"1"
         },
-        "ASVPCZoneIdentifier":{  
+        "SubnetList":{  
             "Type":"List<AWS::EC2::Subnet::Id>",
-            "Description":"A list of subnet identifiers of Amazon Virtual Private Cloud (Amazon VPCs)"
+            "Description":"Select list of private subnets"
         },
         "FeatureName":{  
             "Type":"String",
@@ -118,7 +118,7 @@
                     }
                 ],
                 "VPCZoneIdentifier":{  
-                    "Ref":"ASVPCZoneIdentifier"
+                    "Ref":"SubnetList"
                 }
             },
             "DependsOn":"AutoscalingLaunchConfigurationGroup"
@@ -128,10 +128,10 @@
             "Properties":{  
                 "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "64"]},
                 "InstanceType":{  
-                    "Ref":"LCInstanceType"
+                    "Ref":"InstanceType"
                 },
                 "KeyName":{  
-                    "Ref":"LCKeyPairName"
+                    "Ref":"KeyPairName"
                 },
                 "SecurityGroups":[  
                     {  
@@ -291,7 +291,7 @@
             "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties" : {
                 "Subnets" : {
-                    "Ref" : "ASVPCZoneIdentifier"
+                    "Ref" : "SubnetList"
                 },
                 "Scheme" : "internal",
                 "SecurityGroups" : [{
