@@ -164,7 +164,7 @@
                                 "sudo apt-get install ansible -y\n",
                                 "sudo apt-get install git -y\n",
                                 "ansible-pull --accept-host-key -d /etc/ansible/leodis -c master -U https://github.com/MarkDordoy/Leodis.git  -i 'localhost'\n",
-                                "echo \"*/20 * * * * root /usr/local/bin/ansible-pull --accept-host-key -c master -d /etc/ansible/leodis -i 'localhost' -U https://github.com/MarkDordoy/Leodis.git >> /var/log/ansible-pull.log 2>&1\" > /tmp/mycrontab.txt\n",
+                                "echo \"*/20 * * * * root /usr/local/bin/ansible-pull --accept-host-key -c master -d /etc/ansible/leodis -i 'localhost' -U https://github.com/MarkDordoy/Leodis.git > /dev/null 2>&1\" > /tmp/mycrontab.txt\n",
                                 "sudo -u ubuntu bash -c 'crontab /tmp/mycrontab.txt'\n"
                             ]
                         ]
@@ -232,13 +232,13 @@
         "CPUAlarmLow": {
      		"Type": "AWS::CloudWatch::Alarm",
      		"Properties": {
-        		"AlarmDescription": "Scale-down if CPU < 60% for 30 minutes",
+        		"AlarmDescription": "Scale-down if CPU < 1% for 30 minutes",
         		"MetricName": "CPUUtilization",
         		"Namespace": "AWS/EC2",
         		"Statistic": "Average",
         		"Period": "900",
         		"EvaluationPeriods": "2",
-        		"Threshold": "5",
+        		"Threshold": "1",
         		"AlarmActions": [ 
         			{ 
         				"Ref": "ScaleDownPolicy" 
