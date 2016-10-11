@@ -164,7 +164,7 @@
                                 "sudo apt-get install ansible -y\n",
                                 "sudo apt-get install git -y\n",
                                 "ansible-pull --accept-host-key -d /etc/ansible/leodis -c master -U https://github.com/MarkDordoy/Leodis.git  -i 'localhost'\n",
-                                "echo \"*/20 * * * * root /usr/local/bin/ansible-pull --accept-host-key -c master -d /etc/ansible/leodis -i 'localhost' -U https://github.com/MarkDordoy/Leodis.git > /dev/null 2>&1\" > /tmp/mycrontab.txt\n",
+                                "echo \"*/20 * * * * root ansible-pull --accept-host-key -c master -d /etc/ansible/leodis -i 'localhost' -U https://github.com/MarkDordoy/Leodis.git > /dev/null 2>&1\" > /tmp/mycrontab.txt\n",
                                 "sudo -u ubuntu bash -c 'crontab /tmp/mycrontab.txt'\n"
                             ]
                         ]
